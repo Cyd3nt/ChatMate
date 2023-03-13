@@ -1,5 +1,6 @@
 package com.example.chatmate
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import com.google.android.material.snackbar.Snackbar
@@ -20,6 +21,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!hasLoginCredentials()) {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish() // Optional: Close the MainActivity after starting LoginActivity
+            return // Skip the rest of the onCreate method
+        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -50,5 +58,22 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    private fun hasLoginCredentials(): Boolean {
+        val keyPairGenerator = KeyPairGenerator.getInstance(
+            KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")
+        keyPairGenerator.initialize(
+            KeyGenParameterSpec.Builder(
+                "myKey",
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                .setKeySize(2048)
+                .build())
+        keyPairGenerator.generateKeyPair()
+
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+        return keyStore.containsAlias("myKey")
     }
 }
