@@ -19,6 +19,85 @@ import com.example.chatmate.ui.login.LoginActivity
 import java.security.KeyStore
 import javax.crypto.Cipher
 
+/*
+import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import java.nio.charset.Charset
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+
+class GenericSecretsKeyStore(private val alias: String, private val context: Context) {
+
+    private val androidKeyStore = "AndroidKeyStore"
+
+    init {
+        generateSecretKey()
+    }
+
+    private fun generateSecretKey() {
+        val keyStore = KeyStore.getInstance(androidKeyStore).apply {
+            load(null)
+        }
+
+        if (!keyStore.containsAlias(alias)) {
+            val keyGenerator = KeyGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_AES, androidKeyStore
+            )
+
+            val keyGenParameterSpec = KeyGenParameterSpec.Builder(
+                alias,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                .build()
+
+            keyGenerator.init(keyGenParameterSpec)
+            keyGenerator.generateKey()
+        }
+    }
+
+    private fun getSecretKey(): SecretKey {
+        val keyStore = KeyStore.getInstance(androidKeyStore).apply {
+            load(null)
+        }
+        return keyStore.getKey(alias, null) as SecretKey
+    }
+
+    fun encrypt(data: String): ByteArray {
+        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding").apply {
+            init(Cipher.ENCRYPT_MODE, getSecretKey())
+        }
+        return cipher.doFinal(data.toByteArray(Charset.forName("UTF-8")))
+    }
+
+    fun decrypt(encryptedData: ByteArray): String {
+        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding").apply {
+            init(Cipher.DECRYPT_MODE, getSecretKey())
+        }
+        return String(cipher.doFinal(encryptedData), Charset.forName("UTF-8"))
+    }
+}
+```
+
+Using this class, you can store and retrieve generic secrets in the Android KeyStore. A unique `alias` should be provided for each distinct instance of the `GenericSecretsKeyStore` class.
+
+To use this class in your app, you can create an instance and call the `encrypt()` and `decrypt()` functions, like so:
+
+```kotlin
+val genericSecretsKeyStore = GenericSecretsKeyStore("sampleAlias", context)
+
+// Encrypt
+val plainText = "mySecretData"
+val encryptedData = genericSecretsKeyStore.encrypt(plainText)
+
+// Decrypt
+val decryptedData = genericSecretsKeyStore.decrypt(encryptedData)
+ */
+
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val ANDROID_KEYSTORE_PROVIDER = "AndroidKeyStore"
