@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
+import android.widget.EditText
+import android.widget.ImageButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
@@ -13,6 +15,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.aallam.openai.api.model.Model
@@ -88,6 +92,26 @@ class MainActivity : AppCompatActivity() {
         )
 //        setupActionBarWithNavController(navController, appBarConfiguration)
 //        navView.setupWithNavController(navController)
+
+        val messages = mutableListOf<String>()
+        val messageAdapter = MessageAdapter(messages)
+
+        val recyclerView = findViewById<RecyclerView>(R.id.conversation_recycler_view)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = messageAdapter
+
+        val messageInput = findViewById<EditText>(R.id.message_input)
+        val sendMessageButton = findViewById<ImageButton>(R.id.send_message_button)
+
+        sendMessageButton.setOnClickListener {
+            val messageText = messageInput.text.toString().trim()
+
+            if (messageText.isNotEmpty()) {
+                messageAdapter.addMessage(messageText)
+                messageInput.setText("") // Clear the input field
+                recyclerView.smoothScrollToPosition(messages.size - 1) // Scroll to the latest message
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
