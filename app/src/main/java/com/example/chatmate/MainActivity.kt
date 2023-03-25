@@ -3,7 +3,6 @@ package com.example.chatmate
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Base64
 import android.view.Menu
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
@@ -16,89 +15,14 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.aallam.openai.api.model.Model
+import com.aallam.openai.client.OpenAI
 import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
-import java.security.KeyStore
-import javax.crypto.Cipher
-
-/*
-import android.content.Context
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
-import java.nio.charset.Charset
-import java.security.KeyStore
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-
-class GenericSecretsKeyStore(private val alias: String, private val context: Context) {
-
-    private val androidKeyStore = "AndroidKeyStore"
-
-    init {
-        generateSecretKey()
-    }
-
-    private fun generateSecretKey() {
-        val keyStore = KeyStore.getInstance(androidKeyStore).apply {
-            load(null)
-        }
-
-        if (!keyStore.containsAlias(alias)) {
-            val keyGenerator = KeyGenerator.getInstance(
-                KeyProperties.KEY_ALGORITHM_AES, androidKeyStore
-            )
-
-            val keyGenParameterSpec = KeyGenParameterSpec.Builder(
-                alias,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            )
-                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                .build()
-
-            keyGenerator.init(keyGenParameterSpec)
-            keyGenerator.generateKey()
-        }
-    }
-
-    private fun getSecretKey(): SecretKey {
-        val keyStore = KeyStore.getInstance(androidKeyStore).apply {
-            load(null)
-        }
-        return keyStore.getKey(alias, null) as SecretKey
-    }
-
-    fun encrypt(data: String): ByteArray {
-        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding").apply {
-            init(Cipher.ENCRYPT_MODE, getSecretKey())
-        }
-        return cipher.doFinal(data.toByteArray(Charset.forName("UTF-8")))
-    }
-
-    fun decrypt(encryptedData: ByteArray): String {
-        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding").apply {
-            init(Cipher.DECRYPT_MODE, getSecretKey())
-        }
-        return String(cipher.doFinal(encryptedData), Charset.forName("UTF-8"))
-    }
-}
-```
-
-Using this class, you can store and retrieve generic secrets in the Android KeyStore. A unique `alias` should be provided for each distinct instance of the `GenericSecretsKeyStore` class.
-
-To use this class in your app, you can create an instance and call the `encrypt()` and `decrypt()` functions, like so:
-
-```kotlin
-val genericSecretsKeyStore = GenericSecretsKeyStore("sampleAlias", context)
-
-// Encrypt
-val plainText = "mySecretData"
-val encryptedData = genericSecretsKeyStore.encrypt(plainText)
-
-// Decrypt
-val decryptedData = genericSecretsKeyStore.decrypt(encryptedData)
- */
+//import kotlinx.coroutines.Dispatchers
+//import kotlinx.coroutines.Job
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -109,14 +33,38 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
+//    private lateinit var job: Job
+//
+//    val coroutineContext: CoroutineContext
+//        get() = Dispatchers.Main + job
+    private lateinit var job: Job
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+
+    private suspend fun fetchModels(openAI: OpenAI): List<Model> {
+        return openAI.models()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (!hasLoginCredentials(this)) {
+        val apiKey = getApiKey(this)
+        if (apiKey.isNullOrEmpty()) {
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             finish() // Optional: Close the MainActivity after starting LoginActivity
             return // Skip the rest of the onCreate method
+        }
+
+        val openAI = OpenAI(apiKey)
+        job = Job()
+        coroutineScope.launch {
+            val models = fetchModels(openAI)
+            println("********** Models: ${models}")
+            for (model in models) {
+                val id = model.id
+                val otherId = id.id
+                println("    $otherId")
+            }
         }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -153,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    private fun hasLoginCredentials(context: Context): Boolean {
+    private fun getApiKey(context: Context): String? {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -170,12 +118,6 @@ class MainActivity : AppCompatActivity() {
 
         val defaultValue = ""
 
-        val value = sharedPreferences.getString(key, defaultValue)
-
-        println("********** Loaded key = ${value}")
-
-        if (value.isNullOrEmpty())
-            return false;
-        return true
+        return sharedPreferences.getString(key, defaultValue)
     }
 }
