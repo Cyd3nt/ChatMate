@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
 //        navView.setupWithNavController(navController)
 
         val messages: MutableList<Message> = mutableListOf()
-        val messageAdapter = MessageAdapter(messages)
+        val messageAdapter = MessageAdapter(this, messages)
 
         val recyclerView = findViewById<RecyclerView>(R.id.conversation_recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)

@@ -4,11 +4,14 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.style.ForegroundColorSpan
 import android.text.style.LeadingMarginSpan
+import android.text.style.MetricAffectingSpan
 import android.text.style.TypefaceSpan
 import android.view.LayoutInflater
 import android.view.View
@@ -70,8 +73,95 @@ class CodeBlockSpan(
     }
 }
 
-class MessageAdapter(private val messages: MutableList<Message>) :
+class CustomTypefaceSpan(private val newType: Typeface) : TypefaceSpan("") {
+
+    override fun updateDrawState(ds: TextPaint) {
+        applyCustomTypeFace(ds, newType)
+    }
+
+    override fun updateMeasureState(paint: TextPaint) {
+        applyCustomTypeFace(paint, newType)
+    }
+
+    private fun applyCustomTypeFace(paint: Paint, newTypeface: Typeface) {
+        val oldTypeface: Typeface = paint.typeface
+        val oldStyle = oldTypeface.style
+        val fakeStyle = oldStyle.and(newTypeface.style.inv())
+
+        if (fakeStyle and Typeface.BOLD != 0) {
+                paint.isFakeBoldText = true
+            }
+
+        if (fakeStyle and Typeface.ITALIC != 0) {
+                paint.textSkewX = -0.25f
+            }
+
+        paint.typeface = newTypeface
+    }
+}
+
+class StyledTextSpan(
+    private val newType: Typeface,
+    private val textSize: Float,
+    private val padding: Float
+) : MetricAffectingSpan(), LeadingMarginSpan {
+
+    override fun updateDrawState(ds: TextPaint) {
+        applyCustomTypeFace(ds, newType)
+    }
+
+    override fun updateMeasureState(paint: TextPaint) {
+        applyCustomTypeFace(paint, newType)
+    }
+
+    private fun applyCustomTypeFace(paint: Paint, newTypeface: Typeface) {
+        val oldTypeface: Typeface = paint.typeface
+        val oldStyle = oldTypeface.style
+        val fakeStyle = oldStyle and newTypeface.style.inv()
+
+        if (fakeStyle and Typeface.BOLD != 0) {
+            paint.isFakeBoldText = true
+        }
+
+        if (fakeStyle and Typeface.ITALIC != 0) {
+            paint.textSkewX = -0.25f
+        }
+
+        paint.typeface = newTypeface
+        paint.textSize = textSize  // Sets the text size
+    }
+
+    override fun getLeadingMargin(first: Boolean): Int {
+        return padding.toInt()  // Sets the indentation (padding)
+    }
+
+    override fun drawLeadingMargin(
+        p0: Canvas?,
+        p1: Paint?,
+        p2: Int,
+        p3: Int,
+        p4: Int,
+        p5: Int,
+        p6: Int,
+        p7: CharSequence?,
+        p8: Int,
+        p9: Int,
+        p10: Boolean,
+        p11: Layout?
+    ) {
+//        TODO("Not yet implemented")
+    }
+}
+
+class MessageAdapter(context: Context, private val messages: MutableList<Message>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private val typeface: Typeface
+
+    init {
+        println("************ Loading fonts")
+        typeface = Typeface.createFromAsset(context.assets, "fonts/JetBrainsMono-Regular.ttf")
+    }
 
     class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val messageTextView: TextView = view.findViewById(R.id.message_text_view)
@@ -140,8 +230,16 @@ class MessageAdapter(private val messages: MutableList<Message>) :
             spannable.setSpan(foregroundColorSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom typeface using TypefaceSpan
-            val typeFaceSpan = TypefaceSpan("monospace")
-            spannable.setSpan(typeFaceSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//            val typeFaceSpan = CustomTypefaceSpan(typeface)
+//            val typeFaceSpan = TypefaceSpan("monospace")
+//            spannable.setSpan(typeFaceSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            // Set custom typeface, text size, and indentation using StyledTextSpan
+//            val typeface = Typeface.createFromAsset(context.assets, "fonts/your_font_file_name.ttf")
+            val textSize = context.resources.getDimension(R.dimen.code_text_size)
+            val indentation = context.resources.getDimension(R.dimen.code_indentation)
+
+            val styledTextSpan = StyledTextSpan(typeface, textSize, indentation)
+            spannable.setSpan(styledTextSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
         return spannable
