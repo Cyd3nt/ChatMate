@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
 //        setupActionBarWithNavController(navController, appBarConfiguration)
 //        navView.setupWithNavController(navController)
 
-        val messages: MutableList<Message> = mutableListOf<Message>()
+        val messages: MutableList<Message> = mutableListOf()
         val messageAdapter = MessageAdapter(messages)
 
         val recyclerView = findViewById<RecyclerView>(R.id.conversation_recycler_view)
@@ -105,27 +105,12 @@ class MainActivity : AppCompatActivity() {
             val messageText = messageInput.text.toString().trim()
 
             if (messageText.isNotEmpty()) {
-                messageAdapter.addMessage(Message(0, messageText, Message.VIEW_TYPE_MESSAGE))
-                messageAdapter.addMessage(Message(0, "", Message.VIEW_TYPE_LOADING))
-
-//                GlobalScope.launch {
-//                    delay(2000)
-//
-//                    // Update the loading indicator item with the result
-//                    withContext(Dispatchers.Main) {
-//                        val result = "API response" // Get the actual API response here
-//                        messageAdapter.updateMessageContent(messages.size - 1, result)
-//                    }
-//                }
+                messageAdapter.addMessage(Message(0, messageText, Message.VIEW_TYPE_MESSAGE, ChatRole.User))
+                messageAdapter.addMessage(Message(0, "", Message.VIEW_TYPE_LOADING, ChatRole.Assistant))
 
                 val chatCompletionRequest = ChatCompletionRequest(
                     model = ModelId("gpt-4"),
-                    messages = listOf(
-                        ChatMessage(
-                            role = ChatRole.User,
-                            content = "Hello!"
-                        )
-                    )
+                    messages = messageAdapter.getChatCompletionsList()
                 )
 
                 val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)

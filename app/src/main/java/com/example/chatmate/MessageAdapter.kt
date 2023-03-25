@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.aallam.openai.api.BetaOpenAI
+import com.aallam.openai.api.chat.ChatMessage
 
 class MessageAdapter(private val messages: MutableList<Message>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -58,5 +60,10 @@ class MessageAdapter(private val messages: MutableList<Message>) :
     fun updateMessageContent(position: Int, content: String) {
         messages[position].content = content
         notifyItemChanged(position)
+    }
+
+    @OptIn(BetaOpenAI::class)
+    fun getChatCompletionsList(): List<ChatMessage> {
+        return messages.map { message: Message -> ChatMessage(message.role, message.content)  }
     }
 }
