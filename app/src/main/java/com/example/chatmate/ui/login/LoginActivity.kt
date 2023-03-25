@@ -37,7 +37,8 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
 
         loginViewModel.loginFormState.observe(
-            this@LoginActivity, Observer {
+            this@LoginActivity,
+            Observer {
             val loginState = it ?: return@Observer
 
             // disable login button unless both username / password is valid
