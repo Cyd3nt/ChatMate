@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.*
@@ -13,37 +14,83 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aallam.openai.api.BetaOpenAI
 import com.aallam.openai.api.chat.ChatMessage
+import kotlin.math.min
 
 data class CodeBlockPosition(val start: Int, val end: Int)
 
-class RoundedBackgroundSpan(
+//class RoundedBackgroundSpan(
+//    private val backgroundColor: Int,
+//    private val cornerRadius: Float
+//) : LineBackgroundSpan {
+//    override fun drawBackground(
+//        canvas: Canvas,
+//        paint: Paint,
+//        left: Int,
+//        right: Int,
+//        top: Int,
+//        baseline: Int,
+//        bottom: Int,
+//        text: CharSequence,
+//        start: Int,
+//        end: Int,
+//        lineNumber: Int
+//    ) {
+//        val oldColor = paint.color
+//        paint.color = backgroundColor
+//
+//        val rect = RectF(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
+//        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+//
+//        paint.color = oldColor
+//    }
+//}
+
+class CodeBlockSpan(
     private val backgroundColor: Int,
-    private val cornerRadius: Float
-) : LineBackgroundSpan {
-    override fun drawBackground(
+    private val cornerRadius: Float,
+    private val padding: Float
+) : LeadingMarginSpan {
+    private var lastTop = 0
+
+    override fun getLeadingMargin(first: Boolean): Int = 0
+
+    override fun drawLeadingMargin(
         canvas: Canvas,
         paint: Paint,
-        left: Int,
-        right: Int,
+        x: Int,
+        dir: Int,
         top: Int,
         baseline: Int,
         bottom: Int,
-        text: CharSequence,
+        text: CharSequence?,
         start: Int,
         end: Int,
-        lineNumber: Int
+        first: Boolean,
+        layout: Layout?
     ) {
-        val oldColor = paint.color
-        paint.color = backgroundColor
+        if (lastTop != top) {
+            val oldColor = paint.color
+            paint.color = backgroundColor
 
-        val rect = RectF(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
-        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+            val left = x + padding * dir
+            val right = (canvas.width - padding) * dir
 
-        paint.color = oldColor
+            val rect = if (first) {
+                RectF(left, top.toFloat(), right, (bottom + padding).toFloat())
+            } else {
+                RectF(left, top.toFloat() - padding, right, bottom.toFloat())
+            }
+
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+            paint.color = oldColor
+
+            lastTop = top
+        }
     }
 }
 
@@ -139,24 +186,73 @@ class MessageAdapter(private val messages: MutableList<Message>) :
 //
 //        return spannable
 //    }
+//    fun styleCodeBlocks(text: String, context: Context): SpannableString {
+//        val spannable = SpannableString(text)
+//        val codeBlockPositions = findCodeBlockPositions(text)
+//
+//        for (position in codeBlockPositions) {
+//            // Set custom background using RoundedBackgroundSpan
+//            val backgroundColor = ContextCompat.getColor(context, R.color.black)
+//            val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
+//            val backgroundSpan = RoundedBackgroundSpan(backgroundColor, cornerRadius)
+//            spannable.setSpan(backgroundSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//
+//            // Set custom text color using ForegroundColorSpan
+//            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.white))
+//            spannable.setSpan(foregroundColorSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//
+//            // Set custom typeface using TypefaceSpan
+//            val typeFaceSpan = TypefaceSpan("monospace")
+//            spannable.setSpan(typeFaceSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//        }
+//
+//        return spannable
+//    }
+//    fun styleCodeBlocks(text: String, context: Context): SpannableString {
+//        val spannable = SpannableString(text)
+//        val codeBlockPositions = findCodeBlockPositions(text)
+//
+//        for (position in codeBlockPositions) {
+//            // Set custom background using CodeBlockSpan
+//            val backgroundColor = ContextCompat.getColor(context, R.color.black)
+//            val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
+//            val padding = context.resources.getDimension(R.dimen.code_block_padding)
+//            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding)
+//            spannable.setSpan(backgroundSpan, position.start, position.end + 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//
+//            // Set custom text color using ForegroundColorSpan
+//            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.white))
+//            spannable.setSpan(foregroundColorSpan, position.start, position.end + 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//
+//            // Set custom typeface using TypefaceSpan
+//            val typeFaceSpan = TypefaceSpan("monospace")
+//            spannable.setSpan(typeFaceSpan, position.start, position.end + 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//        }
+//
+//        return spannable
+//    }
     fun styleCodeBlocks(text: String, context: Context): SpannableString {
         val spannable = SpannableString(text)
         val codeBlockPositions = findCodeBlockPositions(text)
 
         for (position in codeBlockPositions) {
-            // Set custom background using RoundedBackgroundSpan
+            val startPos = position.start
+            val endPos = min(position.end + 3, text.length)
+
+            // Set custom background using CodeBlockSpan
             val backgroundColor = ContextCompat.getColor(context, R.color.black)
             val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
-            val backgroundSpan = RoundedBackgroundSpan(backgroundColor, cornerRadius)
-            spannable.setSpan(backgroundSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val padding = context.resources.getDimension(R.dimen.code_block_padding)
+            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding)
+            spannable.setSpan(backgroundSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom text color using ForegroundColorSpan
             val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.white))
-            spannable.setSpan(foregroundColorSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(foregroundColorSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom typeface using TypefaceSpan
             val typeFaceSpan = TypefaceSpan("monospace")
-            spannable.setSpan(typeFaceSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(typeFaceSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
         return spannable

@@ -6,4 +6,5 @@
     <dimen name="nav_header_height">176dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="code_block_corner_radius">5dp</dimen>
+    <dimen name="code_block_padding">5dp</dimen>
 </resources>
