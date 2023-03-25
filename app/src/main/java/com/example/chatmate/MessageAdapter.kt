@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aallam.openai.api.BetaOpenAI
 import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatRole
 import kotlin.math.min
 
 data class CodeBlockPosition(val start: Int, val end: Int)
@@ -146,10 +147,24 @@ class MessageAdapter(private val messages: MutableList<Message>) :
         return spannable
     }
 
+    @OptIn(BetaOpenAI::class)
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val currentItem = messages[position]
         if (holder is MessageViewHolder) {
             val message = currentItem.content
+
+            // Set the background color based on the item's color property
+            if (currentItem.role == ChatRole.User) {
+                holder.messageTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.black))
+            } else {
+                holder.messageTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.grey))
+            }
+
+            // Set the layout height to wrap_content, to compress the item vertically according to the text size
+            val layoutParams = holder.messageTextView.layoutParams
+            layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            holder.messageTextView.layoutParams = layoutParams
+
             if (isCodeBlock(message)) {
                 holder.messageTextView.text =
                     styleCodeBlocks(currentItem.content, holder.itemView.context)

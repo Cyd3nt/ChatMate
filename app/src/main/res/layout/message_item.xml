@@ -9,7 +9,6 @@
         android:id="@+id/message_text_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/message_item_background"
         android:padding="8dp"
         android:lineSpacingExtra="2sp"
         app:layout_constraintEnd_toEndOf="parent"
