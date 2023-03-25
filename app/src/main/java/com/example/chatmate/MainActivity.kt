@@ -14,6 +14,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
 import java.security.KeyStore
@@ -110,7 +112,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (!hasLoginCredentials()) {
+        if (!hasLoginCredentials(this)) {
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             finish() // Optional: Close the MainActivity after starting LoginActivity
@@ -151,49 +153,29 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    private fun hasLoginCredentials(): Boolean {
-        val keyStore = KeyStore.getInstance("AndroidKeyStore")
-        keyStore.load(null)
+    private fun hasLoginCredentials(context: Context): Boolean {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
 
-        val organizationAlias = "organization_alias"
-        val apiKeyAlias = "api_key_alias"
+        val sharedPreferences = EncryptedSharedPreferences.create(
+            context,
+            "secret_shared_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
 
-        val organizationEntry = keyStore.getEntry(organizationAlias, null)// as KeyStore.SecretKeyEntry
-        val apiKeyEntry = keyStore.getEntry(apiKeyAlias, null)// as KeyStore.SecretKeyEntry
-        if (organizationEntry == null && apiKeyEntry == null)
-            return false
+        val key = "openai_api_key"
 
-        val organizationSecretKeyEntry: KeyStore.SecretKeyEntry = organizationEntry as KeyStore.SecretKeyEntry
-        val apiKeySecretKeyEntry: KeyStore.SecretKeyEntry = apiKeyEntry as KeyStore.SecretKeyEntry
+        val defaultValue = ""
 
-        val organizationCipher = Cipher.getInstance("AES/CBC/PKCS7Padding").apply {
-            init(Cipher.DECRYPT_MODE, organizationSecretKeyEntry.secretKey)
-        }
-        val apiKeyCipher = Cipher.getInstance("AES/CBC/PKCS7Padding").apply {
-            init(Cipher.DECRYPT_MODE, apiKeySecretKeyEntry.secretKey)
-        }
+        val value = sharedPreferences.getString(key, defaultValue)
 
-        val sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
-        val organizationEncryptedString = sharedPreferences.getString(organizationAlias, null)
-        val apiKeyEncryptedString = sharedPreferences.getString(apiKeyAlias, null)
+        println("********** Loaded key = ${value}")
 
-        if (organizationEncryptedString != null && apiKeyEncryptedString != null) {
-            val organizationEncryptedBytes = Base64.decode(organizationEncryptedString, Base64.DEFAULT)
-            val apiKeyEncryptedBytes = Base64.decode(apiKeyEncryptedString, Base64.DEFAULT)
-
-            val organizationBytes = organizationCipher.doFinal(organizationEncryptedBytes)
-            val apiKeyBytes = apiKeyCipher.doFinal(apiKeyEncryptedBytes)
-
-            val organization = String(organizationBytes, Charsets.UTF_8)
-            val apiKey = String(apiKeyBytes, Charsets.UTF_8)
-
-            // Use the organization and apiKey here
-            println("****** organization = $organization")
-            println("****** apiKey = $apiKey")
-        } else {
-            // No organization and apiKey were found
-        }
-
-        return false
+        if (value.isNullOrEmpty())
+            return false;
+        return true
     }
 }

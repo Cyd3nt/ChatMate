@@ -17,6 +17,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.example.chatmate.MainActivity
 import com.example.chatmate.databinding.ActivityLoginBinding
 import java.security.KeyStore
@@ -34,7 +36,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val organization = binding.organization
         val apiKey = binding.apiKey
         val login = binding.login
         val loading = binding.loading
@@ -48,9 +49,6 @@ class LoginActivity : AppCompatActivity() {
             // disable login button unless both username / password is valid
             login.isEnabled = loginState.isDataValid
 
-            if (loginState.usernameError != null) {
-                organization.error = getString(loginState.usernameError)
-            }
             if (loginState.passwordError != null) {
                 apiKey.error = getString(loginState.passwordError)
             }
@@ -64,7 +62,7 @@ class LoginActivity : AppCompatActivity() {
                 showLoginFailed(loginResult.error)
             }
             if (loginResult.success != null) {
-                updateUiWithUser(loginResult.success, organization.text.toString(), apiKey.text.toString())
+                updateUiWithUser(this, loginResult.success, apiKey.text.toString())
             }
             setResult(Activity.RESULT_OK)
 
@@ -72,17 +70,9 @@ class LoginActivity : AppCompatActivity() {
             finish()
         })
 
-        organization.afterTextChanged {
-            loginViewModel.loginDataChanged(
-                organization.text.toString(),
-                apiKey.text.toString()
-            )
-        }
-
         apiKey.apply {
             afterTextChanged {
                 loginViewModel.loginDataChanged(
-                    organization.text.toString(),
                     apiKey.text.toString()
                 )
             }
@@ -91,7 +81,6 @@ class LoginActivity : AppCompatActivity() {
                 when (actionId) {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
-                            organization.text.toString(),
                             apiKey.text.toString()
                         )
                 }
@@ -100,69 +89,29 @@ class LoginActivity : AppCompatActivity() {
 
             login.setOnClickListener {
                 loading.visibility = View.VISIBLE
-                loginViewModel.login(organization.text.toString(), apiKey.text.toString())
+                loginViewModel.login(apiKey.text.toString())
             }
         }
     }
 
-    private fun updateUiWithUser(model: LoggedInUserView, organization: String, apiKey: String) {
-        // Store the organization and apiKey in the Android Keystore
-        val keyStore = KeyStore.getInstance("AndroidKeyStore")
-        keyStore.load(null)
+    private fun updateUiWithUser(context: Context, model: LoggedInUserView, apiKey: String) {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
 
-        val organizationAlias = "organization_alias"
-        val apiKeyAlias = "api_key_alias"
+        val sharedPreferences = EncryptedSharedPreferences.create(
+            context,
+            "secret_shared_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
 
-        val organizationKey = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-            .apply {
-                init(
-                    KeyGenParameterSpec.Builder(
-                        organizationAlias,
-                        KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-                    )
-                        .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                        .setKeySize(256)
-                        .build()
-                )
-            }
-            .generateKey()
+        val editor = sharedPreferences.edit()
 
-        val apiKeyKey = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-            .apply {
-                init(
-                    KeyGenParameterSpec.Builder(
-                        apiKeyAlias,
-                        KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-                    )
-                        .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                        .setKeySize(256)
-                        .build()
-                )
-            }
-            .generateKey()
+        editor.putString("openai_api_key", apiKey)
 
-        val organizationCipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-            .apply {
-                init(Cipher.ENCRYPT_MODE, organizationKey)
-            }
-        val organizationEncryptedBytes = organizationCipher.doFinal(organization.toByteArray(Charsets.UTF_8))
-
-        val apiKeyCipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-            .apply {
-                init(Cipher.ENCRYPT_MODE, apiKeyKey)
-            }
-        val apiKeyEncryptedBytes = apiKeyCipher.doFinal(apiKey.toByteArray(Charsets.UTF_8))
-
-        val organizationEncryptedString = Base64.encodeToString(organizationEncryptedBytes, Base64.DEFAULT)
-        val apiKeyEncryptedString = Base64.encodeToString(apiKeyEncryptedBytes, Base64.DEFAULT)
-
-        val sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit()
-            .putString(organizationAlias, organizationEncryptedString)
-            .putString(apiKeyAlias, apiKeyEncryptedString)
-            .apply()
+        editor.apply()
 
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
