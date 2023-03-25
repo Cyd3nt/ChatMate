@@ -45,7 +45,7 @@ class CodeBlockSpan(
         start: Int,
         end: Int,
         first: Boolean,
-        layout: Layout?
+        layout: Layout?,
     ) {
         if (lastTop != top) {
             val oldColor = paint.color
@@ -183,6 +183,6 @@ class MessageAdapter(private val messages: MutableList<Message>) :
 
     @OptIn(BetaOpenAI::class)
     fun getChatCompletionsList(): List<ChatMessage> {
-        return messages.map { message: Message -> ChatMessage(message.role, message.content)  }
+        return messages.map { message: Message -> ChatMessage(message.role, message.content) }
     }
 }
