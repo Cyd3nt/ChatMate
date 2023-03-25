@@ -24,25 +24,11 @@ import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
-import com.vladsch.flexmark.ast.FencedCodeBlock
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.NodeVisitor
-import com.vladsch.flexmark.util.ast.VisitHandler
-import com.vladsch.flexmark.util.ast.Visitor
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        private const val ANDROID_KEYSTORE_PROVIDER = "AndroidKeyStore"
-        private const val ORGANIZATION_KEY_ALIAS = "organization_alias"
-        private const val API_KEY_ALIAS = "api_key_alias"
-    }
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
-//    private lateinit var job: Job
-//
-//    val coroutineContext: CoroutineContext
-//        get() = Dispatchers.Main + job
     private lateinit var job: Job
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
@@ -66,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         job = Job()
         coroutineScope.launch {
             val models = fetchModels(openAI)
-            println("********** Models: ${models}")
+            println("********** Models: models")
             for (model in models) {
                 val id = model.id
                 val otherId = id.id
