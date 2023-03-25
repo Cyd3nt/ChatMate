@@ -22,4 +22,6 @@
     <string name="organization">Organization</string>
     <string name="api_key">API Key</string>
     <string name="login">Login</string>
+    <string name="input_prompt">Enter message here...</string>
+    <string name="send">Send</string>
 </resources>
