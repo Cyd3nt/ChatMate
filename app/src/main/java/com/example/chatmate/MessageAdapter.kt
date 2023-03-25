@@ -89,12 +89,12 @@ class CustomTypefaceSpan(private val newType: Typeface) : TypefaceSpan("") {
         val fakeStyle = oldStyle.and(newTypeface.style.inv())
 
         if (fakeStyle and Typeface.BOLD != 0) {
-                paint.isFakeBoldText = true
-            }
+            paint.isFakeBoldText = true
+        }
 
         if (fakeStyle and Typeface.ITALIC != 0) {
-                paint.textSkewX = -0.25f
-            }
+            paint.textSkewX = -0.25f
+        }
 
         paint.typeface = newTypeface
     }
@@ -103,7 +103,7 @@ class CustomTypefaceSpan(private val newType: Typeface) : TypefaceSpan("") {
 class StyledTextSpan(
     private val newType: Typeface,
     private val textSize: Float,
-    private val padding: Float
+    private val padding: Float,
 ) : MetricAffectingSpan(), LeadingMarginSpan {
 
     override fun updateDrawState(ds: TextPaint) {
@@ -128,11 +128,11 @@ class StyledTextSpan(
         }
 
         paint.typeface = newTypeface
-        paint.textSize = textSize  // Sets the text size
+        paint.textSize = textSize // Sets the text size
     }
 
     override fun getLeadingMargin(first: Boolean): Int {
-        return padding.toInt()  // Sets the indentation (padding)
+        return padding.toInt() // Sets the indentation (padding)
     }
 
     override fun drawLeadingMargin(
@@ -147,9 +147,8 @@ class StyledTextSpan(
         p8: Int,
         p9: Int,
         p10: Boolean,
-        p11: Layout?
+        p11: Layout?,
     ) {
-//        TODO("Not yet implemented")
     }
 }
 
