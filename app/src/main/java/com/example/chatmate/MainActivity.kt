@@ -6,24 +6,31 @@ import android.os.Bundle
 import android.view.Menu
 import android.widget.EditText
 import android.widget.ImageButton
-import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.navigation.NavigationView
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.navigation.ui.AppBarConfiguration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.aallam.openai.api.BetaOpenAI
-import com.aallam.openai.api.chat.*
+import com.aallam.openai.api.chat.ChatChunk
+import com.aallam.openai.api.chat.ChatCompletionChunk
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatDelta
+import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.Model
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
-import kotlinx.coroutines.*
+import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -76,7 +83,9 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow
+                R.id.nav_home,
+                R.id.nav_gallery,
+                R.id.nav_slideshow,
             ), drawerLayout
         )
 //        setupActionBarWithNavController(navController, appBarConfiguration)
