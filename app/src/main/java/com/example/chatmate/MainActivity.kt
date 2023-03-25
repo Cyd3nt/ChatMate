@@ -24,6 +24,11 @@ import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import com.vladsch.flexmark.ast.FencedCodeBlock
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.ast.NodeVisitor
+import com.vladsch.flexmark.util.ast.VisitHandler
+import com.vladsch.flexmark.util.ast.Visitor
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -117,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                 coroutineScope.launch {
                     var response = ""
                     completions.collect { chatCompletionChunk ->
-                        println("********* Received chunk: $chatCompletionChunk")
+//                        println("********* Received chunk: $chatCompletionChunk")
                         val choices: List<ChatChunk> = chatCompletionChunk.choices
                         for (choice in choices) {
                             val delta: ChatDelta? = choice.delta
@@ -125,6 +130,22 @@ class MainActivity : AppCompatActivity() {
                                 val content = delta.content
                                 if (content != null) {
                                     response = response.plus(content)
+
+                                    if ("```" in response) {
+                                        val parser = Parser.builder().build()
+                                        val document = parser.parse(response)
+
+                                        val visitor = NodeVisitor(
+                                            VisitHandler(FencedCodeBlock::class.java, Visitor { node: FencedCodeBlock ->
+                                                val language = node.info
+                                                val codeBlock = node.contentChars
+//                                                println("Language: $language\nCode Block: $codeBlock\n")
+                                            })
+                                        )
+
+                                        visitor.visit(document)
+                                    }
+
                                     messages.takeLast(1)[0].viewType = Message.VIEW_TYPE_MESSAGE
                                     messageAdapter.updateMessageContent(messages.size - 1, response)
                                 }

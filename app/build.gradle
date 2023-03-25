@@ -55,4 +55,10 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
     implementation "io.ktor:ktor-client-core:2.2.4"
     implementation "io.ktor:ktor-client-android:2.2.4"
+
+    implementation 'com.vladsch.flexmark:flexmark:0.64.0'
+//    implementation 'com.vladsch.flexmark:flexmark-ext-gfm-tables:0.50.50'
+//    implementation 'com.vladsch.flexmark:flexmark-ext-autolink:0.64.0'
+//    implementation 'com.vladsch.flexmark:flexmark-ext-gfm-tasklist:0.64.0'
+//    implementation 'com.vladsch.flexmark:flexmark-ext-yaml-front-matter:0.64.0'
 }
