@@ -55,8 +55,8 @@ class MessageAdapter(private val messages: MutableList<Message>) :
         return messages[position].viewType
     }
 
-//    fun updateMessageContent(position: Int, content: String) {
-//        messages[position].content = content
-//        notifyItemChanged(position)
-//    }
+    fun updateMessageContent(position: Int, content: String) {
+        messages[position].content = content
+        notifyItemChanged(position)
+    }
 }

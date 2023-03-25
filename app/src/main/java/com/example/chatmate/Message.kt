@@ -2,8 +2,8 @@ package com.example.chatmate
 
 data class Message(
     val id: Long,
-    val content: String,
-    val viewType: Int
+    var content: String,
+    var viewType: Int
 ) {
     companion object {
         const val VIEW_TYPE_MESSAGE = 1

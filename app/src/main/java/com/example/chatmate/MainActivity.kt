@@ -15,11 +15,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.aallam.openai.api.BetaOpenAI
+import com.aallam.openai.api.chat.*
 import com.aallam.openai.api.model.Model
+import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -41,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         return openAI.models()
     }
 
+    @OptIn(BetaOpenAI::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -102,6 +107,47 @@ class MainActivity : AppCompatActivity() {
             if (messageText.isNotEmpty()) {
                 messageAdapter.addMessage(Message(0, messageText, Message.VIEW_TYPE_MESSAGE))
                 messageAdapter.addMessage(Message(0, "", Message.VIEW_TYPE_LOADING))
+
+//                GlobalScope.launch {
+//                    delay(2000)
+//
+//                    // Update the loading indicator item with the result
+//                    withContext(Dispatchers.Main) {
+//                        val result = "API response" // Get the actual API response here
+//                        messageAdapter.updateMessageContent(messages.size - 1, result)
+//                    }
+//                }
+
+                val chatCompletionRequest = ChatCompletionRequest(
+                    model = ModelId("gpt-4"),
+                    messages = listOf(
+                        ChatMessage(
+                            role = ChatRole.User,
+                            content = "Hello!"
+                        )
+                    )
+                )
+
+                val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)
+                coroutineScope.launch {
+                    var response = ""
+                    completions.collect { chatCompletionChunk ->
+                        println("********* Received chunk: $chatCompletionChunk")
+                        val choices: List<ChatChunk> = chatCompletionChunk.choices
+                        for (choice in choices) {
+                            val delta: ChatDelta? = choice.delta
+                            if (delta != null) {
+                                val content = delta.content
+                                if (content != null) {
+                                    response = response.plus(content)
+                                    messages.takeLast(1)[0].viewType = Message.VIEW_TYPE_MESSAGE
+                                    messageAdapter.updateMessageContent(messages.size - 1, response)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 messageInput.setText("") // Clear the input field
                 recyclerView.smoothScrollToPosition(messages.size - 1) // Scroll to the latest message
             }
