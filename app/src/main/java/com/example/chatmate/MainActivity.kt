@@ -8,11 +8,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
-import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,9 +19,6 @@ import com.aallam.openai.api.model.Model
 import com.aallam.openai.client.OpenAI
 import com.example.chatmate.databinding.ActivityMainBinding
 import com.example.chatmate.ui.login.LoginActivity
-//import kotlinx.coroutines.Dispatchers
-//import kotlinx.coroutines.Job
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
@@ -93,7 +86,7 @@ class MainActivity : AppCompatActivity() {
 //        setupActionBarWithNavController(navController, appBarConfiguration)
 //        navView.setupWithNavController(navController)
 
-        val messages = mutableListOf<String>()
+        val messages: MutableList<Message> = mutableListOf<Message>()
         val messageAdapter = MessageAdapter(messages)
 
         val recyclerView = findViewById<RecyclerView>(R.id.conversation_recycler_view)
@@ -107,7 +100,8 @@ class MainActivity : AppCompatActivity() {
             val messageText = messageInput.text.toString().trim()
 
             if (messageText.isNotEmpty()) {
-                messageAdapter.addMessage(messageText)
+                messageAdapter.addMessage(Message(0, messageText, Message.VIEW_TYPE_MESSAGE))
+                messageAdapter.addMessage(Message(0, "", Message.VIEW_TYPE_LOADING))
                 messageInput.setText("") // Clear the input field
                 recyclerView.smoothScrollToPosition(messages.size - 1) // Scroll to the latest message
             }
