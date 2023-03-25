@@ -3,6 +3,18 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+apply plugin: "io.gitlab.arturbosch.detekt"
+
+detekt {
+    buildUponDefaultConfig = true // Inherit the default Detekt configuration
+
+    reports {
+        html.enabled = true // Enable HTML report generation
+        xml.enabled = true // Enable XML report generation
+        txt.enabled = true // Enable text report generation
+    }
+}
+
 android {
     namespace 'com.example.chatmate'
     compileSdk 33
