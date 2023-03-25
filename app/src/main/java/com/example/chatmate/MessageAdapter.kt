@@ -1,22 +1,12 @@
 package com.example.chatmate
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
 import android.graphics.Typeface
-import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
-import android.text.TextPaint
 import android.text.style.ForegroundColorSpan
-import android.text.style.LeadingMarginSpan
-import android.text.style.MetricAffectingSpan
-import android.text.style.TypefaceSpan
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aallam.openai.api.BetaOpenAI
@@ -24,152 +14,17 @@ import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatRole
 import kotlin.math.min
 
-data class CodeBlockPosition(val start: Int, val end: Int)
-
-class CodeBlockSpan(
-    private val backgroundColor: Int,
-    private val cornerRadius: Float,
-    private val padding: Float,
-    private val leftPadding: Float,
-//    private val topPadding: Float
-) : LeadingMarginSpan {
-    private var lastTop = 0
-
-    override fun getLeadingMargin(first: Boolean): Int = 0
-
-    override fun drawLeadingMargin(
-        canvas: Canvas,
-        paint: Paint,
-        x: Int,
-        dir: Int,
-        top: Int,
-        baseline: Int,
-        bottom: Int,
-        text: CharSequence?,
-        start: Int,
-        end: Int,
-        first: Boolean,
-        layout: Layout?,
-    ) {
-        if (lastTop != top) {
-            val oldColor = paint.color
-            paint.color = backgroundColor
-
-            val left = x + leftPadding * dir
-            val right = canvas.width * dir
-//            val topAdjusted = top.toFloat() - if (first) 0f else topPadding
-
-            val rect = if (first) {
-                RectF(left, top.toFloat(), right.toFloat(), (bottom + padding))
-            } else {
-                RectF(left, top.toFloat() - padding, right.toFloat(), bottom.toFloat())
-            }
-
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-            paint.color = oldColor
-
-            lastTop = top
-        }
-    }
-}
-
-class CustomTypefaceSpan(private val newType: Typeface) : TypefaceSpan("") {
-
-    override fun updateDrawState(ds: TextPaint) {
-        applyCustomTypeFace(ds, newType)
-    }
-
-    override fun updateMeasureState(paint: TextPaint) {
-        applyCustomTypeFace(paint, newType)
-    }
-
-    private fun applyCustomTypeFace(paint: Paint, newTypeface: Typeface) {
-        val oldTypeface: Typeface = paint.typeface
-        val oldStyle = oldTypeface.style
-        val fakeStyle = oldStyle.and(newTypeface.style.inv())
-
-        if (fakeStyle and Typeface.BOLD != 0) {
-            paint.isFakeBoldText = true
-        }
-
-        if (fakeStyle and Typeface.ITALIC != 0) {
-            paint.textSkewX = -0.25f
-        }
-
-        paint.typeface = newTypeface
-    }
-}
-
-class StyledTextSpan(
-    private val newType: Typeface,
-    private val textSize: Float,
-    private val padding: Float,
-) : MetricAffectingSpan(), LeadingMarginSpan {
-
-    override fun updateDrawState(ds: TextPaint) {
-        applyCustomTypeFace(ds, newType)
-    }
-
-    override fun updateMeasureState(paint: TextPaint) {
-        applyCustomTypeFace(paint, newType)
-    }
-
-    private fun applyCustomTypeFace(paint: Paint, newTypeface: Typeface) {
-        val oldTypeface: Typeface = paint.typeface
-        val oldStyle = oldTypeface.style
-        val fakeStyle = oldStyle and newTypeface.style.inv()
-
-        if (fakeStyle and Typeface.BOLD != 0) {
-            paint.isFakeBoldText = true
-        }
-
-        if (fakeStyle and Typeface.ITALIC != 0) {
-            paint.textSkewX = -0.25f
-        }
-
-        paint.typeface = newTypeface
-        paint.textSize = textSize // Sets the text size
-    }
-
-    override fun getLeadingMargin(first: Boolean): Int {
-        return padding.toInt() // Sets the indentation (padding)
-    }
-
-    override fun drawLeadingMargin(
-        p0: Canvas?,
-        p1: Paint?,
-        p2: Int,
-        p3: Int,
-        p4: Int,
-        p5: Int,
-        p6: Int,
-        p7: CharSequence?,
-        p8: Int,
-        p9: Int,
-        p10: Boolean,
-        p11: Layout?,
-    ) {
-    }
-}
-
+/**
+ * MessageAdapter is a RecyclerView.Adapter responsible for managing and rendering messages.
+ */
 class MessageAdapter(context: Context, private val messages: MutableList<Message>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val typeface: Typeface
+    private val typeface: Typeface = Typeface.createFromAsset(context.assets, "fonts/JetBrainsMono-Regular.ttf")
 
-    init {
-        println("************ Loading fonts")
-        typeface = Typeface.createFromAsset(context.assets, "fonts/JetBrainsMono-Regular.ttf")
-    }
-
-    class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val messageTextView: TextView = view.findViewById(R.id.message_text_view)
-    }
-
-    class LoadingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-//        val loadingIndicator: ProgressBar = view.findViewById(R.id.loading_indicator)
-    }
-
+    /**
+     * onCreateViewHolder is used to create a new view holder based on the provided view type.
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             Message.VIEW_TYPE_MESSAGE -> {
@@ -186,6 +41,9 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
         }
     }
 
+    /**
+     * findCodeBlockPositions is a helper function that detects the positions of code blocks in a given text.
+     */
     private fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
         val regex = Regex("```")
         val result = mutableListOf<CodeBlockPosition>()
@@ -207,6 +65,9 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
         return result
     }
 
+    /**
+     * styleCodeBlocks styles the code blocks in the given text using customized span instances.
+     */
     private fun styleCodeBlocks(text: String, context: Context): SpannableString {
         val spannable = SpannableString(text)
         val codeBlockPositions = findCodeBlockPositions(text)
@@ -271,9 +132,10 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
         }
     }
 
+    /**
+     * isCodeBlock checks if the given text contains a code block according to the required logic.
+     */
     private fun isCodeBlock(text: String): Boolean {
-        // Add your logic to detect code blocks in your messages.
-        // The following is a simple example using triple backticks.
         return text.contains("```")
     }
 
