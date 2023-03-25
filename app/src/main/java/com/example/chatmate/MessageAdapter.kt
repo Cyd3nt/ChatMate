@@ -53,7 +53,9 @@ data class CodeBlockPosition(val start: Int, val end: Int)
 class CodeBlockSpan(
     private val backgroundColor: Int,
     private val cornerRadius: Float,
-    private val padding: Float
+    private val padding: Float,
+    private val leftPadding: Float,
+    private val topPadding: Float
 ) : LeadingMarginSpan {
     private var lastTop = 0
 
@@ -77,13 +79,16 @@ class CodeBlockSpan(
             val oldColor = paint.color
             paint.color = backgroundColor
 
-            val left = x + padding * dir
-            val right = (canvas.width - padding) * dir
+//            val left = x + padding * dir
+//            val right = (canvas.width - padding) * dir
+            val left = x + leftPadding * dir
+            val right = canvas.width * dir
+            val topAdjusted = top.toFloat() - if (first) 0f else topPadding
 
             val rect = if (first) {
-                RectF(left, top.toFloat(), right, (bottom + padding).toFloat())
+                RectF(left, top.toFloat(), right.toFloat(), (bottom + padding).toFloat())
             } else {
-                RectF(left, top.toFloat() - padding, right, bottom.toFloat())
+                RectF(left, top.toFloat() - padding, right.toFloat(), bottom.toFloat())
             }
 
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
@@ -240,10 +245,16 @@ class MessageAdapter(private val messages: MutableList<Message>) :
             val endPos = min(position.end + 3, text.length)
 
             // Set custom background using CodeBlockSpan
+//            val backgroundColor = ContextCompat.getColor(context, R.color.black)
+//            val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
+//            val padding = context.resources.getDimension(R.dimen.code_block_padding)
+//            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding)
             val backgroundColor = ContextCompat.getColor(context, R.color.black)
             val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
             val padding = context.resources.getDimension(R.dimen.code_block_padding)
-            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding)
+            val leftPadding = context.resources.getDimension(R.dimen.code_block_left_padding)
+            val topPadding = context.resources.getDimension(R.dimen.code_block_top_padding)
+            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding, leftPadding, topPadding)
             spannable.setSpan(backgroundSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom text color using ForegroundColorSpan
