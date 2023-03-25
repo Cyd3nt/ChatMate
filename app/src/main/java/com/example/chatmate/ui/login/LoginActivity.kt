@@ -39,15 +39,16 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel.loginFormState.observe(
             this@LoginActivity,
             Observer {
-            val loginState = it ?: return@Observer
+                val loginState = it ?: return@Observer
 
-            // disable login button unless both username / password is valid
-            login.isEnabled = loginState.isDataValid
+                // disable login button unless both username / password is valid
+                login.isEnabled = loginState.isDataValid
 
-            if (loginState.passwordError != null) {
-                apiKey.error = getString(loginState.passwordError)
-            }
-        })
+                if (loginState.passwordError != null) {
+                    apiKey.error = getString(loginState.passwordError)
+                }
+            },
+        )
 
         loginViewModel.loginResult.observe(this@LoginActivity, Observer {
             val loginResult = it ?: return@Observer
