@@ -54,6 +54,124 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+//        fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+//            val regex = Regex("(?=```).*?(?:```|$)", setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE))
+//            val result = mutableListOf<CodeBlockPosition>()
+//            regex.findAll(text).forEach { matchResult ->
+//                result.add(CodeBlockPosition(matchResult.range.first, matchResult.range.last))
+//            }
+//            return result
+//        }
+        fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+            val regex = Regex("```")
+            val result = mutableListOf<CodeBlockPosition>()
+
+            val backtickPositions = regex.findAll(text).map { it.range.first }.toList()
+            val numberOfPairs = backtickPositions.size / 2
+
+            for (i in 0 until numberOfPairs) {
+                val startPosition = backtickPositions[2 * i]
+                val endPosition = backtickPositions[2 * i + 1]
+                result.add(CodeBlockPosition(startPosition, endPosition))
+            }
+
+            // Handle open code blocks without an ending
+            if (backtickPositions.size % 2 == 1) {
+                result.add(CodeBlockPosition(backtickPositions.last(), text.length))
+            }
+
+            return result
+        }
+
+        val code = """
+            I apologize for the confusion. Let's change the approach to use `LineHeightSpan` and modify the `styleCodeBlocks` function. This method should style the complete code block, including the lines in between, while keeping the text properly aligned.
+
+            1. Create a custom `LineHeightSpan` that adds a background with rounded corners:
+
+            ```kotlin
+            class RoundedBackgroundWithIncreasedHeightSpan(
+                private val backgroundColor: Int,
+                private val cornerRadius: Float,
+                private val extraLineHeight: Int
+            ) : LineHeightSpan {
+                override fun chooseHeight(
+                    text: CharSequence,
+                    start: Int,
+                    end: Int,
+                    spanstartv: Int,
+                    lineHeight: Int,
+                    fm: Paint.FontMetricsInt
+                ) {
+                    fm.descent += extraLineHeight / 2
+                    fm.ascent -= extraLineHeight / 2
+                    fm.top = fm.ascent
+                    fm.bottom = fm.descent
+                }
+
+                override fun draw(
+                    canvas: Canvas,
+                    text: CharSequence,
+                    start: Int,
+                    end: Int,
+                    x: Float,
+                    top: Int,
+                    y: Int,
+                    bottom: Int,
+                    paint: Paint
+                ) {
+                    val oldColor = paint.color
+                    paint.color = backgroundColor
+
+                    val width = paint.measureText(text, start, end)
+                    val rect = RectF(x, top.toFloat(), x + width, bottom.toFloat())
+                    canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+
+                    paint.color = oldColor
+                }
+            }
+            ```
+
+            2. Modify the `styleCodeBlocks` utility function:
+
+            ```kotlin
+            fun styleCodeBlocks(text: String, context: Context): SpannableString {
+                val spannable = SpannableString(text)
+                val codeBlockPositions = findCodeBlockPositions(text)
+
+                for (position in codeBlockPositions) {
+                    // Set custom background using RoundedBackgroundWithIncreasedHeightSpan
+                    val backgroundColor = ContextCompat.getColor(context, R.color.your_custom_background_color)
+                    val cornerRadius = context.resources.getDimension(R.dimen.your_custom_corner_radius)
+                    val extraLineHeight = context.resources.getDimensionPixelSize(R.dimen.your_custom_extra_line_height)
+                    val backgroundSpan = RoundedBackgroundWithIncreasedHeightSpan(backgroundColor, cornerRadius, extraLineHeight)
+                    spannable.setSpan(backgroundSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                    // Set custom text color using ForegroundColorSpan
+                    val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.your_custom_text_color))
+                    spannable.setSpan(foregroundColorSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                    // Set custom typeface using TypefaceSpan
+                    val typeFaceSpan = TypefaceSpan("monospace")
+                    spannable.setSpan(typeFaceSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+
+                return spannable
+            }
+            ```
+
+            Make sure to define appropriate dimensions for custom corner radius and extra line height in your `dimens.xml`:
+
+            ```xml
+            <dimen name="your_custom_corner_radius">8dp</dimen>
+            <dimen name="your_custom_extra_line_height">4dp</dimen>
+            ```
+
+            This implementation should ensure proper styling of the entire code block, including the content between the backticks while maintaining alignment and layout.
+        """
+
+        val blocks: List<CodeBlockPosition> = findCodeBlockPositions(code)
+        println("********** Blocks: $blocks")
+
         val apiKey = getApiKey(this)
         if (apiKey.isNullOrEmpty()) {
             val intent = Intent(this, LoginActivity::class.java)
@@ -131,20 +249,20 @@ class MainActivity : AppCompatActivity() {
                                 if (content != null) {
                                     response = response.plus(content)
 
-                                    if ("```" in response) {
-                                        val parser = Parser.builder().build()
-                                        val document = parser.parse(response)
-
-                                        val visitor = NodeVisitor(
-                                            VisitHandler(FencedCodeBlock::class.java, Visitor { node: FencedCodeBlock ->
-                                                val language = node.info
-                                                val codeBlock = node.contentChars
-//                                                println("Language: $language\nCode Block: $codeBlock\n")
-                                            })
-                                        )
-
-                                        visitor.visit(document)
-                                    }
+//                                    if ("```" in response) {
+//                                        val parser = Parser.builder().build()
+//                                        val document = parser.parse(response)
+//
+//                                        val visitor = NodeVisitor(
+//                                            VisitHandler(FencedCodeBlock::class.java, Visitor { node: FencedCodeBlock ->
+//                                                val language = node.info
+//                                                val codeBlock = node.contentChars
+////                                                println("Language: $language\nCode Block: $codeBlock\n")
+//                                            })
+//                                        )
+//
+//                                        visitor.visit(document)
+//                                    }
 
                                     messages.takeLast(1)[0].viewType = Message.VIEW_TYPE_MESSAGE
                                     messageAdapter.updateMessageContent(messages.size - 1, response)

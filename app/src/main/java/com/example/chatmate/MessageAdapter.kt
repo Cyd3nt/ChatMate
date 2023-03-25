@@ -1,13 +1,51 @@
 package com.example.chatmate
 
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aallam.openai.api.BetaOpenAI
 import com.aallam.openai.api.chat.ChatMessage
+
+data class CodeBlockPosition(val start: Int, val end: Int)
+
+class RoundedBackgroundSpan(
+    private val backgroundColor: Int,
+    private val cornerRadius: Float
+) : LineBackgroundSpan {
+    override fun drawBackground(
+        canvas: Canvas,
+        paint: Paint,
+        left: Int,
+        right: Int,
+        top: Int,
+        baseline: Int,
+        bottom: Int,
+        text: CharSequence,
+        start: Int,
+        end: Int,
+        lineNumber: Int
+    ) {
+        val oldColor = paint.color
+        paint.color = backgroundColor
+
+        val rect = RectF(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+
+        paint.color = oldColor
+    }
+}
 
 class MessageAdapter(private val messages: MutableList<Message>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -36,14 +74,145 @@ class MessageAdapter(private val messages: MutableList<Message>) :
         }
     }
 
+//    fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+//        val regex = Regex("```.*?```", setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE))
+//        val result = mutableListOf<CodeBlockPosition>()
+//        regex.findAll(text).forEach { matchResult ->
+//            result.add(CodeBlockPosition(matchResult.range.first, matchResult.range.last))
+//        }
+//        return result
+//    }
+//    fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+//        val regex = Regex("```.*?(?:```|$)", setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE))
+//        val result = mutableListOf<CodeBlockPosition>()
+//        regex.findAll(text).forEach { matchResult ->
+//            result.add(CodeBlockPosition(matchResult.range.first, matchResult.range.last))
+//        }
+//        return result
+//    }
+//    fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+//        val regex = Regex("(?=```).*?(?:```|$)", setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE))
+//        val result = mutableListOf<CodeBlockPosition>()
+//        regex.findAll(text).forEach { matchResult ->
+//            result.add(CodeBlockPosition(matchResult.range.first, matchResult.range.last))
+//        }
+//        return result
+//    }
+    fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+        val regex = Regex("```")
+        val result = mutableListOf<CodeBlockPosition>()
+
+        val backtickPositions = regex.findAll(text).map { it.range.first }.toList()
+        val numberOfPairs = backtickPositions.size / 2
+
+        for (i in 0 until numberOfPairs) {
+            val startPosition = backtickPositions[2 * i]
+            val endPosition = backtickPositions[2 * i + 1]
+            result.add(CodeBlockPosition(startPosition, endPosition))
+        }
+
+        // Handle open code blocks without an ending
+        if (backtickPositions.size % 2 == 1) {
+            result.add(CodeBlockPosition(backtickPositions.last(), text.length))
+        }
+
+        return result
+    }
+
+//    fun styleCodeBlocks(text: String, context: Context): SpannableString {
+//        val spannable = SpannableString(text)
+//        val codeBlockPositions = findCodeBlockPositions(text)
+//
+//        for (position in codeBlockPositions) {
+//            // Set custom background color using BackgroundColorSpan
+//            val backgroundColorSpan = BackgroundColorSpan(ContextCompat.getColor(context, R.color.black))
+//            spannable.setSpan(backgroundColorSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//
+//            // Set custom text color using ForegroundColorSpan
+//            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.white))
+//            spannable.setSpan(foregroundColorSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//
+//            // Set custom typeface using TypeFaceSpan
+//            val typeFaceSpan = TypefaceSpan("monospace")
+//            spannable.setSpan(typeFaceSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//        }
+//
+//        return spannable
+//    }
+    fun styleCodeBlocks(text: String, context: Context): SpannableString {
+        val spannable = SpannableString(text)
+        val codeBlockPositions = findCodeBlockPositions(text)
+
+        for (position in codeBlockPositions) {
+            // Set custom background using RoundedBackgroundSpan
+            val backgroundColor = ContextCompat.getColor(context, R.color.black)
+            val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
+            val backgroundSpan = RoundedBackgroundSpan(backgroundColor, cornerRadius)
+            spannable.setSpan(backgroundSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            // Set custom text color using ForegroundColorSpan
+            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.white))
+            spannable.setSpan(foregroundColorSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            // Set custom typeface using TypefaceSpan
+            val typeFaceSpan = TypefaceSpan("monospace")
+            spannable.setSpan(typeFaceSpan, position.start, position.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        return spannable
+    }
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val currentItem = messages[position]) {
             is Message -> {
                 if (holder is MessageViewHolder) {
-                    holder.messageTextView.text = currentItem.content
+                    val styledMessage = styleCodeBlocks(currentItem.content, holder.itemView.context)
+//                    holder.messageTextView.text = currentItem.content
+                    holder.messageTextView.text = styledMessage
+//                    val messageTextView = holder.itemView.findViewById<TextView>(R.id.message_text_view)
+//                    messageTextView.text = styledMessage
+
+//                    if (isCodeBlock(currentItem.content)) {
+//                        // Apply custom styling for code blocks
+//                        messageTextView.setBackgroundResource(R.drawable.message_code_block_item_background)
+//                        // Set any additional properties, e.g., typeface, text color, etc.
+//                        messageTextView.typeface = Typeface.MONOSPACE
+//                        messageTextView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
+//                    } else {
+//                        // Apply default styling for non-code block messages
+//                        messageTextView.setBackgroundResource(R.drawable.message_item_background)
+//                        // Reset any additional properties
+//                        messageTextView.typeface = Typeface.DEFAULT
+//                        messageTextView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white))
+//                    }
+
+//                    val messageTextView = holder.itemView.findViewById<TextView>(R.id.message_text_view)
+//                    val message = messagesList[position] // Retrieve the message from your data set
+//
+//                    if (isCodeBlock(message)) {
+//                        // Apply custom styling for code blocks
+//                        messageTextView.setBackgroundResource(R.drawable.message_code_block_item_background)
+//                        // Set any additional properties, e.g., typeface, text color, etc.
+//                        messageTextView.typeface = Typeface.MONOSPACE
+//                        messageTextView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.your_custom_color))
+//                    } else {
+//                        // Apply default styling for non-code block messages
+//                        messageTextView.setBackgroundResource(R.drawable.message_item_background)
+//                        // Reset any additional properties
+//                        messageTextView.typeface = Typeface.DEFAULT
+//                        messageTextView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.default_text_color))
+//                    }
+//
+//                    messageTextView.text = message
                 }
             }
         }
+    }
+
+    fun isCodeBlock(text: String): Boolean {
+        // Add your logic to detect code blocks in your messages.
+        // The following is a simple example using triple backticks.
+        return text.contains("```")
     }
 
     override fun getItemCount(): Int = messages.size
