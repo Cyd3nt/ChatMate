@@ -64,7 +64,7 @@ class LoginActivity : AppCompatActivity() {
                 }
                 setResult(Activity.RESULT_OK)
 
-                //Complete and destroy login activity once successful
+                // Complete and destroy login activity once successful
                 finish()
             },
         )
@@ -78,7 +78,7 @@ class LoginActivity : AppCompatActivity() {
                 when (actionId) {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
-                            apiKey.text.toString()
+                            apiKey.text.toString(),
                         )
                 }
                 false
@@ -101,7 +101,7 @@ class LoginActivity : AppCompatActivity() {
             "secret_shared_prefs",
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
 
         val editor = sharedPreferences.edit()
