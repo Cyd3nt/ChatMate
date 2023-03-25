@@ -7,12 +7,6 @@ apply plugin: "io.gitlab.arturbosch.detekt"
 
 detekt {
     buildUponDefaultConfig = true // Inherit the default Detekt configuration
-
-    reports {
-        html.enabled = true // Enable HTML report generation
-        xml.enabled = true // Enable XML report generation
-        txt.enabled = true // Enable text report generation
-    }
 }
 
 android {
@@ -36,11 +30,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     buildFeatures {
         viewBinding true
@@ -48,7 +42,6 @@ android {
 }
 
 dependencies {
-
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
@@ -67,10 +60,5 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
     implementation "io.ktor:ktor-client-core:2.2.4"
     implementation "io.ktor:ktor-client-android:2.2.4"
-
     implementation 'com.vladsch.flexmark:flexmark:0.64.0'
-//    implementation 'com.vladsch.flexmark:flexmark-ext-gfm-tables:0.50.50'
-//    implementation 'com.vladsch.flexmark:flexmark-ext-autolink:0.64.0'
-//    implementation 'com.vladsch.flexmark:flexmark-ext-gfm-tasklist:0.64.0'
-//    implementation 'com.vladsch.flexmark:flexmark-ext-yaml-front-matter:0.64.0'
 }
