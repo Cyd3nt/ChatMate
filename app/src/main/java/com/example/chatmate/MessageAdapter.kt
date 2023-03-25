@@ -7,11 +7,12 @@ import android.graphics.RectF
 import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
-import android.text.style.*
+import android.text.style.ForegroundColorSpan
+import android.text.style.LeadingMarginSpan
+import android.text.style.TypefaceSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -26,7 +27,7 @@ class CodeBlockSpan(
     private val cornerRadius: Float,
     private val padding: Float,
     private val leftPadding: Float,
-    private val topPadding: Float
+//    private val topPadding: Float
 ) : LeadingMarginSpan {
     private var lastTop = 0
 
@@ -52,10 +53,10 @@ class CodeBlockSpan(
 
             val left = x + leftPadding * dir
             val right = canvas.width * dir
-            val topAdjusted = top.toFloat() - if (first) 0f else topPadding
+//            val topAdjusted = top.toFloat() - if (first) 0f else topPadding
 
             val rect = if (first) {
-                RectF(left, top.toFloat(), right.toFloat(), (bottom + padding).toFloat())
+                RectF(left, top.toFloat(), right.toFloat(), (bottom + padding))
             } else {
                 RectF(left, top.toFloat() - padding, right.toFloat(), bottom.toFloat())
             }
@@ -76,7 +77,7 @@ class MessageAdapter(private val messages: MutableList<Message>) :
     }
 
     class LoadingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val loadingIndicator: ProgressBar = view.findViewById(R.id.loading_indicator)
+//        val loadingIndicator: ProgressBar = view.findViewById(R.id.loading_indicator)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -95,7 +96,7 @@ class MessageAdapter(private val messages: MutableList<Message>) :
         }
     }
 
-    fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
+    private fun findCodeBlockPositions(text: String): List<CodeBlockPosition> {
         val regex = Regex("```")
         val result = mutableListOf<CodeBlockPosition>()
 
@@ -116,7 +117,7 @@ class MessageAdapter(private val messages: MutableList<Message>) :
         return result
     }
 
-    fun styleCodeBlocks(text: String, context: Context): SpannableString {
+    private fun styleCodeBlocks(text: String, context: Context): SpannableString {
         val spannable = SpannableString(text)
         val codeBlockPositions = findCodeBlockPositions(text)
 
@@ -129,8 +130,8 @@ class MessageAdapter(private val messages: MutableList<Message>) :
             val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
             val padding = context.resources.getDimension(R.dimen.code_block_padding)
             val leftPadding = context.resources.getDimension(R.dimen.code_block_left_padding)
-            val topPadding = context.resources.getDimension(R.dimen.code_block_top_padding)
-            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding, leftPadding, topPadding)
+//            val topPadding = context.resources.getDimension(R.dimen.code_block_top_padding)
+            val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding, leftPadding)
             spannable.setSpan(backgroundSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom text color using ForegroundColorSpan
@@ -146,17 +147,19 @@ class MessageAdapter(private val messages: MutableList<Message>) :
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (val currentItem = messages[position]) {
-            is Message -> {
-                if (holder is MessageViewHolder) {
-                    val styledMessage = styleCodeBlocks(currentItem.content, holder.itemView.context)
-                    holder.messageTextView.text = styledMessage
-                }
+        val currentItem = messages[position]
+        if (holder is MessageViewHolder) {
+            val message = currentItem.content
+            if (isCodeBlock(message)) {
+                holder.messageTextView.text =
+                    styleCodeBlocks(currentItem.content, holder.itemView.context)
+            } else {
+                holder.messageTextView.text = message
             }
         }
     }
 
-    fun isCodeBlock(text: String): Boolean {
+    private fun isCodeBlock(text: String): Boolean {
         // Add your logic to detect code blocks in your messages.
         // The following is a simple example using triple backticks.
         return text.contains("```")
