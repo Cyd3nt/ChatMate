@@ -50,27 +50,28 @@ class LoginActivity : AppCompatActivity() {
             },
         )
 
-        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
-            val loginResult = it ?: return@Observer
+        loginViewModel.loginResult.observe(
+            this@LoginActivity,
+            Observer {
+                val loginResult = it ?: return@Observer
 
-            loading.visibility = View.GONE
-            if (loginResult.error != null) {
-                showLoginFailed(loginResult.error)
-            }
-            if (loginResult.success != null) {
-                updateUiWithUser(this, apiKey.text.toString())
-            }
-            setResult(Activity.RESULT_OK)
+                loading.visibility = View.GONE
+                if (loginResult.error != null) {
+                    showLoginFailed(loginResult.error)
+                }
+                if (loginResult.success != null) {
+                    updateUiWithUser(this, apiKey.text.toString())
+                }
+                setResult(Activity.RESULT_OK)
 
-            //Complete and destroy login activity once successful
-            finish()
-        })
+                //Complete and destroy login activity once successful
+                finish()
+            },
+        )
 
         apiKey.apply {
             afterTextChanged {
-                loginViewModel.loginDataChanged(
-                    apiKey.text.toString()
-                )
+                loginViewModel.loginDataChanged()
             }
 
             setOnEditorActionListener { _, actionId, _ ->
