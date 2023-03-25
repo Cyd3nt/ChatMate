@@ -86,7 +86,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home,
                 R.id.nav_gallery,
                 R.id.nav_slideshow,
-            ), drawerLayout
+            ),
+            drawerLayout,
         )
 //        setupActionBarWithNavController(navController, appBarConfiguration)
 //        navView.setupWithNavController(navController)
@@ -110,7 +111,7 @@ class MainActivity : AppCompatActivity() {
 
                 val chatCompletionRequest = ChatCompletionRequest(
                     model = ModelId("gpt-4"),
-                    messages = messageAdapter.getChatCompletionsList()
+                    messages = messageAdapter.getChatCompletionsList(),
                 )
 
                 val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)
@@ -134,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 //                                            VisitHandler(FencedCodeBlock::class.java, Visitor { node: FencedCodeBlock ->
 //                                                val language = node.info
 //                                                val codeBlock = node.contentChars
-////                                                println("Language: $language\nCode Block: $codeBlock\n")
+//                                                println("Language: $language\nCode Block: $codeBlock\n")
 //                                            })
 //                                        )
 //
@@ -177,7 +178,7 @@ class MainActivity : AppCompatActivity() {
             "secret_shared_prefs",
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
 
         val key = "openai_api_key"
