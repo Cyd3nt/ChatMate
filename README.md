@@ -1,6 +1,7 @@
 <p align="center">
   <img src="images/logo.png" alt="Logo">
 </p>
+
 # ChatMate: Your Intelligent Programming Assistant
 
 ChatMate is a free and open-source Android app that harnesses the power of GPT-4 API to provide you with real-time, interactive conversations. Built specifically for programmers, developers, and tech enthusiasts, this innovative app delivers accurately formatted responses to your programming inquiries, making it an invaluable tool for those seeking assistance or collaboration in the world of coding.
