@@ -28,6 +28,12 @@ ChatMate represents a leap forward in how developers access and leverage artific
 
 If you're a developer seeking an intelligent conversation partner with a strong understanding of programming concepts, look no further than ChatMate. Join our open-source community today and experience the unparalleled benefits of a next-gen AI programming assistant right on your Android device.
 
+## Screens
+
+<p align="center">
+  <img src="images/screen.png" alt="Screenshot">
+</p>
+
 ## Requirements
 
 ChatMate currently requires an OpenAI API Key to be input on the startup screen. While the app is completely free and open-source it incurs costs for using the OpenAI API. The GPT-4 model is currently the default but in the future it will allow for a choice
