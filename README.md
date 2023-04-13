@@ -31,7 +31,7 @@ If you're a developer seeking an intelligent conversation partner with a strong 
 ## Screens
 
 <p align="center">
-  <img src="images/screen.jpg" alt="Screenshot">
+  <img src="images/screen.jpg" alt="Screenshot" height="500">
 </p>
 
 ## Requirements
