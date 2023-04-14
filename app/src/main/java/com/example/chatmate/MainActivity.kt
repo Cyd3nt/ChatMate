@@ -125,21 +125,6 @@ class MainActivity : AppCompatActivity() {
                                 if (content != null) {
                                     response = response.plus(content)
 
-//                                    if ("```" in response) {
-//                                        val parser = Parser.builder().build()
-//                                        val document = parser.parse(response)
-//
-//                                        val visitor = NodeVisitor(
-//                                            VisitHandler(FencedCodeBlock::class.java, Visitor { node: FencedCodeBlock ->
-//                                                val language = node.info
-//                                                val codeBlock = node.contentChars
-//                                                println("Language: $language\nCode Block: $codeBlock\n")
-//                                            })
-//                                        )
-//
-//                                        visitor.visit(document)
-//                                    }
-
                                     messages.takeLast(1)[0].viewType = Message.VIEW_TYPE_MESSAGE
                                     messageAdapter.updateMessageContent(messages.size - 1, response)
                                 }

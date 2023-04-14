@@ -56,6 +56,5 @@ class StyledTextSpan(
         p9: Int,
         p10: Boolean,
         p11: Layout?,
-    ) {
-    }
+    ) = Unit
 }

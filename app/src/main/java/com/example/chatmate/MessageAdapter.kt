@@ -14,6 +14,21 @@ import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatRole
 import kotlin.math.min
 
+// if ("```" in response) {
+//     val parser = Parser.builder().build()
+//     val document = parser.parse(response)
+
+//     val visitor = NodeVisitor(
+//         VisitHandler(FencedCodeBlock::class.java, Visitor { node: FencedCodeBlock ->
+//             val language = node.info
+//             val codeBlock = node.contentChars
+//             println("Language: $language\nCode Block: $codeBlock\n")
+//         })
+//     )
+
+//     visitor.visit(document)
+// }
+
 /**
  * MessageAdapter is a RecyclerView.Adapter responsible for managing and rendering messages.
  */
@@ -86,15 +101,11 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
             spannable.setSpan(backgroundSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom text color using ForegroundColorSpan
-            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context, R.color.white))
-            spannable.setSpan(foregroundColorSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context,
+                R.color.white))
+            spannable.setSpan(foregroundColorSpan, startPos, endPos,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-            // Set custom typeface using TypefaceSpan
-//            val typeFaceSpan = CustomTypefaceSpan(typeface)
-//            val typeFaceSpan = TypefaceSpan("monospace")
-//            spannable.setSpan(typeFaceSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            // Set custom typeface, text size, and indentation using StyledTextSpan
-//            val typeface = Typeface.createFromAsset(context.assets, "fonts/your_font_file_name.ttf")
             val textSize = context.resources.getDimension(R.dimen.code_text_size)
             val indentation = context.resources.getDimension(R.dimen.code_indentation)
 
