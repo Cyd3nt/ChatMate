@@ -37,6 +37,10 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
 
     private val typeface: Typeface = Typeface.createFromAsset(context.assets, "fonts/JetBrainsMono-Regular.ttf")
 
+    companion object {
+        const val CODE_BLOCK_SKIP_CHARACTERS = 3
+    }
+
     /**
      * onCreateViewHolder is used to create a new view holder based on the provided view type.
      */
@@ -89,7 +93,7 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
 
         for (position in codeBlockPositions) {
             val startPos = position.start
-            val endPos = min(position.end + 3, text.length)
+            val endPos = min(position.end + CODE_BLOCK_SKIP_CHARACTERS, text.length)
 
             // Set custom background using CodeBlockSpan
             val backgroundColor = ContextCompat.getColor(context, R.color.black)
