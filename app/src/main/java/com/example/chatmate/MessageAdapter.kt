@@ -96,15 +96,22 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
             val cornerRadius = context.resources.getDimension(R.dimen.code_block_corner_radius)
             val padding = context.resources.getDimension(R.dimen.code_block_padding)
             val leftPadding = context.resources.getDimension(R.dimen.code_block_left_padding)
-//            val topPadding = context.resources.getDimension(R.dimen.code_block_top_padding)
             val backgroundSpan = CodeBlockSpan(backgroundColor, cornerRadius, padding, leftPadding)
             spannable.setSpan(backgroundSpan, startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             // Set custom text color using ForegroundColorSpan
-            val foregroundColorSpan = ForegroundColorSpan(ContextCompat.getColor(context,
-                R.color.white))
-            spannable.setSpan(foregroundColorSpan, startPos, endPos,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val foregroundColorSpan = ForegroundColorSpan(
+                ContextCompat.getColor(
+                    context,
+                    R.color.white
+                )
+            )
+            spannable.setSpan(
+                foregroundColorSpan,
+                startPos,
+                endPos,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
 
             val textSize = context.resources.getDimension(R.dimen.code_text_size)
             val indentation = context.resources.getDimension(R.dimen.code_indentation)
@@ -124,12 +131,23 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
 
             // Set the background color based on the item's color property
             if (currentItem.role == ChatRole.User) {
-                holder.messageTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.black))
+                holder.messageTextView.setBackgroundColor(
+                    ContextCompat.getColor(
+                        holder.itemView.context,
+                        R.color.black
+                    )
+                )
             } else {
-                holder.messageTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.grey))
+                holder.messageTextView.setBackgroundColor(
+                    ContextCompat.getColor(
+                        holder.itemView.context,
+                        R.color.grey
+                    )
+                )
             }
 
-            // Set the layout height to wrap_content, to compress the item vertically according to the text size
+            // Set the layout height to wrap_content, to compress the item vertically according to
+            // the text size
             val layoutParams = holder.messageTextView.layoutParams
             layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
             holder.messageTextView.layoutParams = layoutParams
