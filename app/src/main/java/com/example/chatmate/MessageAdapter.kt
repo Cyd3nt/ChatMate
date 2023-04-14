@@ -129,6 +129,7 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
 
     @OptIn(BetaOpenAI::class)
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        println("******** onBindViewHolder: position = $position")
         val currentItem = messages[position]
         if (holder is MessageViewHolder) {
             val message = currentItem.content
