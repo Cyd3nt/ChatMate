@@ -19,11 +19,9 @@ import com.aallam.openai.api.chat.ChatCompletionChunk
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatDelta
 import com.aallam.openai.api.chat.ChatRole
-import com.aallam.openai.api.model.Model
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.example.chatmate.databinding.ActivityMainBinding
-import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,11 +35,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var job: Job
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-    private suspend fun fetchModels(openAI: OpenAI): List<Model> {
-        return openAI.models()
-    }
+    private val messages: MutableList<Message> = mutableListOf()
 
-    @OptIn(BetaOpenAI::class)
+//    private suspend fun fetchModels(openAI: OpenAI): List<Model> {
+//        return openAI.models()
+//    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -55,28 +54,23 @@ class MainActivity : AppCompatActivity() {
 
         val openAI = OpenAI(apiKey)
         job = Job()
-        coroutineScope.launch {
-            val models = fetchModels(openAI)
-            println("********** Models: models")
-            for (model in models) {
-                val id = model.id
-                val otherId = id.id
-                println("    $otherId")
-            }
-        }
+//        coroutineScope.launch {
+//            val models = fetchModels(openAI)
+//            println("********** Models: models")
+//            for (model in models) {
+//                val id = model.id
+//                val otherId = id.id
+//                println("    $otherId")
+//            }
+//        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.appBarMain.toolbar)
 
-//        binding.appBarMain.fab.setOnClickListener { view ->
-//            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                .setAction("Action", null).show()
-//        }
         val drawerLayout: DrawerLayout = binding.drawerLayout
-        val navView: NavigationView = binding.navView
-//        val navController = findNavController(R.id.nav_host_fragment_content_main)
+
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
@@ -87,12 +81,8 @@ class MainActivity : AppCompatActivity() {
             ),
             drawerLayout,
         )
-//        setupActionBarWithNavController(navController, appBarConfiguration)
-//        navView.setupWithNavController(navController)
 
-        val messages: MutableList<Message> = mutableListOf()
         val messageAdapter = MessageAdapter(this, messages)
-
         val recyclerView = findViewById<RecyclerView>(R.id.conversation_recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = messageAdapter
@@ -101,41 +91,9 @@ class MainActivity : AppCompatActivity() {
         val sendMessageButton = findViewById<ImageButton>(R.id.send_message_button)
 
         sendMessageButton.setOnClickListener {
-            val messageText = messageInput.text.toString().trim()
-
-            if (messageText.isNotEmpty()) {
-                messageAdapter.addMessage(Message(0, messageText, Message.VIEW_TYPE_MESSAGE, ChatRole.User))
-                messageAdapter.addMessage(Message(0, "", Message.VIEW_TYPE_LOADING, ChatRole.Assistant))
-
-                val chatCompletionRequest = ChatCompletionRequest(
-                    model = ModelId("gpt-4"),
-                    messages = messageAdapter.getChatCompletionsList(),
-                )
-
-                val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)
-                coroutineScope.launch {
-                    var response = ""
-                    completions.collect { chatCompletionChunk ->
-//                        println("********* Received chunk: $chatCompletionChunk")
-                        val choices: List<ChatChunk> = chatCompletionChunk.choices
-                        for (choice in choices) {
-                            val delta: ChatDelta? = choice.delta
-                            if (delta != null) {
-                                val content = delta.content
-                                if (content != null) {
-                                    response = response.plus(content)
-
-                                    messages.takeLast(1)[0].viewType = Message.VIEW_TYPE_MESSAGE
-                                    messageAdapter.updateMessageContent(messages.size - 1, response)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                messageInput.setText("") // Clear the input field
-                recyclerView.smoothScrollToPosition(messages.size - 1) // Scroll to the latest message
-            }
+            onSendMessage(messageInput.text.toString().trim(), openAI, messageAdapter)
+            messageInput.setText("") // Clear the input field
+            recyclerView.smoothScrollToPosition(messages.size - 1) // Scroll to the latest message
         }
     }
 
@@ -169,5 +127,39 @@ class MainActivity : AppCompatActivity() {
         val defaultValue = ""
 
         return sharedPreferences.getString(key, defaultValue)
+    }
+
+    @OptIn(BetaOpenAI::class)
+    private fun onSendMessage(message: String, openAI: OpenAI, messageAdapter: MessageAdapter) {
+        if (message.isNotEmpty()) {
+            messageAdapter.addMessage(Message(0, message, Message.VIEW_TYPE_MESSAGE, ChatRole.User))
+            messageAdapter.addMessage(Message(0, "", Message.VIEW_TYPE_LOADING, ChatRole.Assistant))
+
+            val chatCompletionRequest = ChatCompletionRequest(
+                model = ModelId("gpt-4"),
+                messages = messageAdapter.getChatCompletionsList(),
+            )
+
+            val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)
+            coroutineScope.launch {
+                var response = ""
+                completions.collect { chatCompletionChunk ->
+//                        println("********* Received chunk: $chatCompletionChunk")
+                    val choices: List<ChatChunk> = chatCompletionChunk.choices
+                    for (choice in choices) {
+                        val delta: ChatDelta? = choice.delta
+                        if (delta != null) {
+                            val content = delta.content
+                            if (content != null) {
+                                response = response.plus(content)
+
+                                messages.takeLast(1)[0].viewType = Message.VIEW_TYPE_MESSAGE
+                                messageAdapter.updateMessageContent(messages.size - 1, response)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -103,14 +103,14 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
             val foregroundColorSpan = ForegroundColorSpan(
                 ContextCompat.getColor(
                     context,
-                    R.color.white
-                )
+                    R.color.white,
+                ),
             )
             spannable.setSpan(
                 foregroundColorSpan,
                 startPos,
                 endPos,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
 
             val textSize = context.resources.getDimension(R.dimen.code_text_size)
@@ -134,15 +134,15 @@ class MessageAdapter(context: Context, private val messages: MutableList<Message
                 holder.messageTextView.setBackgroundColor(
                     ContextCompat.getColor(
                         holder.itemView.context,
-                        R.color.black
-                    )
+                        R.color.black,
+                    ),
                 )
             } else {
                 holder.messageTextView.setBackgroundColor(
                     ContextCompat.getColor(
                         holder.itemView.context,
-                        R.color.grey
-                    )
+                        R.color.grey,
+                    ),
                 )
             }
 
