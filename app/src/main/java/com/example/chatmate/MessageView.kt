@@ -22,11 +22,10 @@ class MessageView @JvmOverloads constructor(
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
         textSize = TEXT_SIZE
-        typeface = Typeface.create( "", Typeface.BOLD)
+        typeface = Typeface.create("", Typeface.BOLD)
     }
 
-    override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
-    }
+    override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) = Unit
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
