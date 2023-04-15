@@ -4,6 +4,7 @@ plugins {
 }
 
 apply plugin: "io.gitlab.arturbosch.detekt"
+apply plugin: "com.github.ben-manes.versions"
 
 detekt {
     buildUponDefaultConfig = true // Inherit the default Detekt configuration
